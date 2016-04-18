@@ -20,6 +20,8 @@ import (
 
 	kube_config "k8s.io/heapster/common/kubernetes"
 	"k8s.io/heapster/metrics/core"
+	"k8s.io/heapster/metrics/sources/ganglia"
+	"k8s.io/heapster/metrics/store"
 	kube_api "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
 	kube_client "k8s.io/kubernetes/pkg/client/unversioned"
@@ -88,10 +90,10 @@ func NewNodeAutoscalingEnricher(url *url.URL) (*NodeAutoscalingEnricher, error) 
 
 	// watch nodes
 	lw := cache.NewListWatchFromClient(kubeClient, "nodes", kube_api.NamespaceAll, fields.Everything())
-	nodeLister := &cache.StoreToNodeLister{Store: cache.NewStore(cache.MetaNamespaceKeyFunc)}
+	nodeLister := &cache.StoreToNodeLister{Store: store.NewBiCache(cache.MetaNamespaceKeyFunc, store.NodeIPFunc, store.GangliaNodeIPFunc)}
 	reflector := cache.NewReflector(lw, &kube_api.Node{}, nodeLister.Store, time.Hour)
 	reflector.Run()
-
+	ganglia.NodeLister = nodeLister
 	return &NodeAutoscalingEnricher{
 		nodeLister: nodeLister,
 		reflector:  reflector,

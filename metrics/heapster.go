@@ -35,6 +35,7 @@ import (
 	"k8s.io/heapster/metrics/processors"
 	"k8s.io/heapster/metrics/sinks"
 	"k8s.io/heapster/metrics/sources"
+	"k8s.io/heapster/metrics/sources/ganglia"
 	"k8s.io/heapster/version"
 )
 
@@ -53,7 +54,9 @@ var (
 
 func main() {
 	defer glog.Flush()
+	// in debug_mode : -source="kubernetes:https://104.197.153.28:443?inClusterConfig=false" ... @MS
 	flag.Var(&argSources, "source", "source(s) to watch")
+	// -sink="influxdb:"
 	flag.Var(&argSinks, "sink", "external sink(s) that receive data")
 	flag.Parse()
 	setMaxProcs()
@@ -121,13 +124,6 @@ func main() {
 		} else {
 			dataProcessors = append(dataProcessors, podBasedEnricher)
 		}
-
-		namespaceBasedEnricher, err := processors.NewNamespaceBasedEnricher(url)
-		if err != nil {
-			glog.Fatalf("Failed to create NamespaceBasedEnricher: %v", err)
-		} else {
-			dataProcessors = append(dataProcessors, namespaceBasedEnricher)
-		}
 	}
 
 	// then aggregators
@@ -150,6 +146,25 @@ func main() {
 			glog.Fatalf("Failed to create NodeAutoscalingEnricher: %v", err)
 		} else {
 			dataProcessors = append(dataProcessors, nodeAutoscalingEnricher)
+		}
+	}
+
+	// ganglia enricher goes next
+	// gangliaBasedEnricher starts with podLister & nodeLister ... @MS
+	gangliaEnricher, err := processors.NewGangliaBasedEnricher(ganglia.PodLister, ganglia.NodeLister)
+	if err != nil {
+		glog.Fatalf("Failed to create GangliaBasedEnricher: %v", err)
+	} else {
+		dataProcessors = append(dataProcessors, gangliaEnricher)
+	}
+
+	// namespace enricher goes after ganglia
+	if url, err := getKubernetesAddress(argSources); err == nil {
+		namespaceBasedEnricher, err := processors.NewNamespaceBasedEnricher(url)
+		if err != nil {
+			glog.Fatalf("Failed to create NamespaceBasedEnricher: %v", err)
+		} else {
+			dataProcessors = append(dataProcessors, namespaceBasedEnricher)
 		}
 	}
 

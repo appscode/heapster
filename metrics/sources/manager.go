@@ -22,6 +22,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/heapster/metrics/sources/ganglia"
 )
 
 const (
@@ -78,6 +79,8 @@ func (this *sourceManager) Name() string {
 func (this *sourceManager) ScrapeMetrics(start, end time.Time) *DataBatch {
 	glog.Infof("Scraping metrics start: %s, end: %s", start, end)
 	sources := this.metricsSourceProvider.GetMetricsSources()
+	// Add ganglia metricsSource ... @MS
+	sources = append(sources, getGangliaSource()...)
 
 	responseChannel := make(chan *DataBatch)
 	startTime := time.Now()
@@ -154,6 +157,12 @@ responseloop:
 		glog.V(1).Infof("   scrape  bucket %d: %d", i, value)
 	}
 	return &response
+}
+
+// add ganglia Source ... @MS
+func getGangliaSource() []MetricsSource {
+	provider := ganglia.NewGangliaProvider()
+	return provider.GetMetricsSources()
 }
 
 func scrape(s MetricsSource, start, end time.Time) *DataBatch {

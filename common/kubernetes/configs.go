@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"k8s.io/heapster/common/flags"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	kube_client "k8s.io/kubernetes/pkg/client/unversioned"
 	kubeClientCmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
@@ -81,6 +82,8 @@ func GetKubeClientConfig(uri *url.URL) (*kube_client.Config, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Set debug_mode if inClusterConfig=false ... @MS
+		flags.DebugMode = !inClusterConfig
 	}
 
 	if inClusterConfig {
@@ -113,6 +116,12 @@ func GetKubeClientConfig(uri *url.URL) (*kube_client.Config, error) {
 			kubeConfig = &kube_client.Config{
 				Host:     configOverrides.ClusterInfo.Server,
 				Insecure: configOverrides.ClusterInfo.InsecureSkipTLSVerify,
+			}
+			// Use insecure mode for debug_mode ... @MS
+			if flags.DebugMode {
+				kubeConfig.Insecure = true
+				kubeConfig.Username = "admin"
+				kubeConfig.Password = "t0YveKRuBAQZeHdA"
 			}
 			kubeConfig.GroupVersion = &unversioned.GroupVersion{Version: configOverrides.ClusterInfo.APIVersion}
 		}

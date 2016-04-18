@@ -25,6 +25,8 @@ import (
 	"k8s.io/heapster/metrics/util"
 
 	"k8s.io/heapster/metrics/core"
+	"k8s.io/heapster/metrics/sources/ganglia"
+	"k8s.io/heapster/metrics/store"
 	kube_api "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
 	kube_client "k8s.io/kubernetes/pkg/client/unversioned"
@@ -211,10 +213,10 @@ func NewPodBasedEnricher(url *url.URL) (*PodBasedEnricher, error) {
 
 	// watch nodes
 	lw := cache.NewListWatchFromClient(kubeClient, "pods", kube_api.NamespaceAll, fields.Everything())
-	podLister := &cache.StoreToPodLister{Store: cache.NewStore(cache.MetaNamespaceKeyFunc)}
+	podLister := &cache.StoreToPodLister{Store: store.NewBiCache(cache.MetaNamespaceKeyFunc, store.PodIPFunc, store.GangliaPodIPFunc)}
 	reflector := cache.NewReflector(lw, &kube_api.Pod{}, podLister.Store, time.Hour)
 	reflector.Run()
-
+	ganglia.PodLister = podLister
 	return &PodBasedEnricher{
 		podLister: podLister,
 		reflector: reflector,

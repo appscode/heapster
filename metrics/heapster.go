@@ -179,6 +179,13 @@ func main() {
 		} else {
 			dataProcessors = append(dataProcessors, namespaceBasedEnricher)
 		}
+
+		serviceBasedEnricher, err := processors.NewServiceBasedEnricher(url)
+		if err != nil {
+			glog.Fatalf("Failed to create ServiceBasedEnricher: %v", err)
+		} else {
+			dataProcessors = append(dataProcessors, serviceBasedEnricher)
+		}
 	}
 
 	// main manager

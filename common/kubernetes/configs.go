@@ -82,8 +82,6 @@ func GetKubeClientConfig(uri *url.URL) (*kube_client.Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Set debug_mode if inClusterConfig=false ... @MS
-		flags.DebugMode = !inClusterConfig
 	}
 
 	if inClusterConfig {
@@ -101,6 +99,9 @@ func GetKubeClientConfig(uri *url.URL) (*kube_client.Config, error) {
 			kubeConfig.TLSClientConfig.CAFile = ""
 		}
 	} else {
+		// Set debug_mode if inClusterConfig=false ... @MS
+		flags.DebugMode = true
+
 		authFile := ""
 		if len(opts["auth"]) > 0 {
 			authFile = opts["auth"][0]

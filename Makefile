@@ -1,7 +1,7 @@
 all: build
 
 TAG = v1.1.0
-PREFIX = gcr.io/google_containers
+PREFIX = appscode
 FLAGS = 
 
 SUPPORTED_KUBE_VERSIONS = "1.2.4"
@@ -36,6 +36,9 @@ container: build
 	cp heapster deploy/docker/heapster
 	cp eventer deploy/docker/eventer
 	docker build -t $(PREFIX)/heapster:$(TAG) deploy/docker/
+
+release: container
+	docker push $(PREFIX)/heapster:$(TAG)
 
 grafana:
 	docker build -t $(PREFIX)/heapster_grafana:$(TAG) grafana/

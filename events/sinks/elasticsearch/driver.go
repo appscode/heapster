@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"encoding/json"
+
 	"github.com/golang/glog"
 	"github.com/olivere/elastic"
 	esCommon "k8s.io/heapster/common/elasticsearch"

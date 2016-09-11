@@ -17,14 +17,15 @@ package elasticsearch
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/olivere/elastic"
 	"github.com/stretchr/testify/assert"
 	esCommon "k8s.io/heapster/common/elasticsearch"
 	"k8s.io/heapster/events/core"
 	kube_api "k8s.io/kubernetes/pkg/api"
 	kube_api_unversioned "k8s.io/kubernetes/pkg/api/unversioned"
-	"testing"
-	"time"
 )
 
 type dataSavedToES struct {

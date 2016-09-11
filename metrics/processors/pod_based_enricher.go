@@ -18,10 +18,8 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
-
-	"k8s.io/heapster/metrics/util"
-
 	"k8s.io/heapster/metrics/core"
+	"k8s.io/heapster/metrics/util"
 	kube_api "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
 )

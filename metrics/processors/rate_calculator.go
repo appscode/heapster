@@ -15,9 +15,10 @@
 package processors
 
 import (
-	"k8s.io/heapster/metrics/core"
+	"strings"
 
 	"github.com/golang/glog"
+	"k8s.io/heapster/metrics/core"
 )
 
 type RateCalculator struct {
@@ -41,7 +42,9 @@ func (this *RateCalculator) Process(batch *core.DataBatch) (*core.DataBatch, err
 	}
 
 	for key, newMs := range batch.MetricSets {
-
+		if strings.HasPrefix(key, "ganglia:") {
+			continue
+		}
 		if oldMs, found := this.previousBatch.MetricSets[key]; found {
 			if !newMs.ScrapeTime.After(oldMs.ScrapeTime) {
 				// New must be strictly after old.

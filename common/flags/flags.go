@@ -22,6 +22,11 @@ import (
 	"strings"
 )
 
+// Global variable for debug_mode ... @MS
+var (
+	DebugMode bool
+)
+
 type Uri struct {
 	Key string
 	Val url.URL

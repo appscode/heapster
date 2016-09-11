@@ -21,11 +21,10 @@ import (
 	"sync"
 	"time"
 
-	influxdb_common "k8s.io/heapster/common/influxdb"
-	"k8s.io/heapster/metrics/core"
-
 	"github.com/golang/glog"
 	influxdb "github.com/influxdb/influxdb/client"
+	influxdb_common "k8s.io/heapster/common/influxdb"
+	"k8s.io/heapster/metrics/core"
 )
 
 type influxdbSink struct {
@@ -64,6 +63,9 @@ func (sink *influxdbSink) ExportData(dataBatch *core.DataBatch) {
 				value = metricValue.IntValue
 			} else if core.ValueFloat == metricValue.ValueType {
 				value = float64(metricValue.FloatValue)
+			} else if core.ValueString == metricValue.ValueType {
+				// export String Data ... @MS
+				value = metricValue.StringValue
 			} else {
 				continue
 			}
@@ -96,12 +98,14 @@ func (sink *influxdbSink) ExportData(dataBatch *core.DataBatch) {
 		}
 
 		for _, labeledMetric := range metricSet.LabeledMetrics {
-
 			var value interface{}
 			if core.ValueInt64 == labeledMetric.ValueType {
 				value = labeledMetric.IntValue
 			} else if core.ValueFloat == labeledMetric.ValueType {
 				value = float64(labeledMetric.FloatValue)
+			} else if core.ValueString == labeledMetric.ValueType {
+				// export String Data ... @MS
+				value = labeledMetric.StringValue
 			} else {
 				continue
 			}

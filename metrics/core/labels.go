@@ -27,6 +27,12 @@ var (
 	MetricSetTypeNamespace       = "ns"
 	MetricSetTypeNode            = "node"
 	MetricSetTypeCluster         = "cluster"
+	// Appscode sflow-ganglia metric type  ... @MS
+	MetricSetTypeAppscodeGanglia = "appscode_ganglia"
+	// Metric source sFlow ... @MS
+	MetricNodeSource = "node_metric"
+	// Metric source user .. @MS
+	MetricPodSource = "pod_metric"
 
 	LabelPodId = LabelDescriptor{
 		Key:         "pod_id",
@@ -40,6 +46,16 @@ var (
 	LabelPodNamespace = LabelDescriptor{
 		Key:         "pod_namespace",
 		Description: "The namespace of the pod",
+	}
+	// Label for metric source ... @MS
+	LabelGangliaSource = LabelDescriptor{
+		Key:         "metric_source",
+		Description: "Source of ganglia metrics",
+	}
+	// Label for host IP mapping (appscode ganglia)... @MS
+	LabelHostIp = LabelDescriptor{
+		Key:         "host_ip",
+		Description: "Internal IP of the node",
 	}
 	LabelNamespaceName = LabelDescriptor{
 		Key:         "namespace_name",

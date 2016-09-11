@@ -43,6 +43,8 @@ type ValueType int8
 const (
 	ValueInt64 ValueType = iota
 	ValueFloat
+	// for String type @MS
+	ValueString
 )
 
 func (self *ValueType) String() string {
@@ -51,6 +53,9 @@ func (self *ValueType) String() string {
 		return "int64"
 	case ValueFloat:
 		return "double"
+	// for String type @MS
+	case ValueString:
+		return "string"
 	}
 	return ""
 }
@@ -89,6 +94,8 @@ type MetricValue struct {
 	FloatValue float32
 	MetricType MetricType
 	ValueType  ValueType
+	// for String type @MS
+	StringValue string
 }
 
 func (this *MetricValue) GetValue() interface{} {
@@ -96,6 +103,9 @@ func (this *MetricValue) GetValue() interface{} {
 		return this.IntValue
 	} else if ValueFloat == this.ValueType {
 		return this.FloatValue
+	} else if ValueString == this.ValueType {
+		// for String type @MS
+		return this.StringValue
 	} else {
 		return nil
 	}

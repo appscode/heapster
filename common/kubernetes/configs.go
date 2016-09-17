@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"k8s.io/heapster/common/flags"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	kube_client "k8s.io/kubernetes/pkg/client/restclient"
 	kubeClientCmd "k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
@@ -98,6 +99,9 @@ func GetKubeClientConfig(uri *url.URL) (*kube_client.Config, error) {
 			kubeConfig.TLSClientConfig.CAFile = ""
 		}
 	} else {
+		// Set debug_mode if inClusterConfig=false ... @MS
+		flags.DebugMode = true
+
 		authFile := ""
 		if len(opts["auth"]) > 0 {
 			authFile = opts["auth"][0]
@@ -114,6 +118,8 @@ func GetKubeClientConfig(uri *url.URL) (*kube_client.Config, error) {
 				Host:     configOverrides.ClusterInfo.Server,
 				Insecure: configOverrides.ClusterInfo.InsecureSkipTLSVerify,
 			}
+			kubeConfig.Insecure = true
+			kubeConfig.BearerToken = ""
 			kubeConfig.GroupVersion = &unversioned.GroupVersion{Version: configOverrides.ClusterInfo.APIVersion}
 		}
 	}

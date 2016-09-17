@@ -24,6 +24,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/heapster/common/flags"
 	kube_api "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
 	kube_client "k8s.io/kubernetes/pkg/client/unversioned"
@@ -422,7 +423,12 @@ func (this *summaryProvider) getNodeInfo(node *kube_api.Node) (NodeInfo, error) 
 		if addr.Type == kube_api.NodeHostName && addr.Address != "" {
 			info.HostName = addr.Address
 		}
-		if addr.Type == kube_api.NodeInternalIP && addr.Address != "" {
+		// in normal_mode, it uses private IP of nodes ... @MS
+		if !flags.DebugMode && addr.Type == kube_api.NodeInternalIP && addr.Address != "" {
+			info.IP = addr.Address
+		}
+		// in debug_mode [when locally runs], it uses public IP of nodes ... @MS
+		if flags.DebugMode && addr.Type == kube_api.NodeExternalIP && addr.Address != "" {
 			info.IP = addr.Address
 		}
 		if addr.Type == kube_api.NodeLegacyHostIP && addr.Address != "" && info.IP == "" {

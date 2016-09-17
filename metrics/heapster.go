@@ -62,7 +62,9 @@ var (
 
 func main() {
 	defer glog.Flush()
+	// in debug_mode : -source="kubernetes:https://104.197.153.28:443?inClusterConfig=false" ... @MS
 	flag.Var(&argSources, "source", "source(s) to watch")
+	// -sink="influxdb:"
 	flag.Var(&argSinks, "sink", "external sink(s) that receive data")
 	flag.Parse()
 	setMaxProcs()

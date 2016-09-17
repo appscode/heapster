@@ -22,6 +22,7 @@ import (
 	"k8s.io/heapster/metrics/util"
 
 	"k8s.io/heapster/metrics/core"
+	"k8s.io/heapster/metrics/sources/ganglia"
 	kube_api "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
 )
@@ -197,6 +198,7 @@ func intValue(value int64) core.MetricValue {
 }
 
 func NewPodBasedEnricher(podLister *cache.StoreToPodLister) (*PodBasedEnricher, error) {
+	ganglia.PodLister = podLister
 	return &PodBasedEnricher{
 		podLister: podLister,
 	}, nil

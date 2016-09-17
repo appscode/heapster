@@ -46,3 +46,8 @@ func NodeContainerKey(node, container string) string {
 func ClusterKey() string {
 	return "cluster"
 }
+
+// generate ganglia key
+func AppscodeGangliaKey(gangliaIP, hostIP string) string {
+	return fmt.Sprintf("ganglia:%s/host:%s", gangliaIP, hostIP)
+}

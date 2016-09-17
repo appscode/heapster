@@ -38,6 +38,8 @@ import (
 	"k8s.io/heapster/metrics/sinks"
 	"k8s.io/heapster/metrics/sinks/metric"
 	"k8s.io/heapster/metrics/sources"
+	"k8s.io/heapster/metrics/sources/ganglia"
+	"k8s.io/heapster/metrics/store"
 	"k8s.io/heapster/version"
 	kube_api "k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/cache"
@@ -62,7 +64,9 @@ var (
 
 func main() {
 	defer glog.Flush()
+	// in debug_mode : -source="kubernetes:https://104.197.153.28:443?inClusterConfig=false" ... @MS
 	flag.Var(&argSources, "source", "source(s) to watch")
+	// -sink="influxdb:"
 	flag.Var(&argSinks, "sink", "external sink(s) that receive data")
 	flag.Parse()
 	setMaxProcs()
@@ -176,6 +180,25 @@ func main() {
 	}
 	dataProcessors = append(dataProcessors, nodeAutoscalingEnricher)
 
+	// ganglia enricher goes next
+	// gangliaBasedEnricher starts with podLister & nodeLister ... @MS
+	gangliaEnricher, err := processors.NewGangliaBasedEnricher(ganglia.PodLister, ganglia.NodeLister)
+	if err != nil {
+		glog.Fatalf("Failed to create GangliaBasedEnricher: %v", err)
+	} else {
+		dataProcessors = append(dataProcessors, gangliaEnricher)
+	}
+
+	// namespace enricher goes after ganglia
+	if url, err := getKubernetesAddress(argSources); err == nil {
+		namespaceBasedEnricher, err := processors.NewNamespaceBasedEnricher(url)
+		if err != nil {
+			glog.Fatalf("Failed to create NamespaceBasedEnricher: %v", err)
+		} else {
+			dataProcessors = append(dataProcessors, namespaceBasedEnricher)
+		}
+	}
+
 	// main manager
 	manager, err := manager.NewManager(sourceManager, dataProcessors, sinkManager, *argMetricResolution,
 		manager.DefaultScrapeOffset, manager.DefaultMaxParallelism)
@@ -267,7 +290,7 @@ func getKubernetesAddress(args flags.Uris) (*url.URL, error) {
 
 func getPodLister(kubeClient *kube_client.Client) (*cache.StoreToPodLister, error) {
 	lw := cache.NewListWatchFromClient(kubeClient, "pods", kube_api.NamespaceAll, fields.Everything())
-	store := cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
+	store := store.NewBiCache(cache.MetaNamespaceKeyFunc, store.PodIPFunc, store.GangliaPodIPFunc)
 	podLister := &cache.StoreToPodLister{Indexer: store}
 	reflector := cache.NewReflector(lw, &kube_api.Pod{}, store, time.Hour)
 	reflector.Run()

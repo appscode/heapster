@@ -14,6 +14,9 @@ build: clean deps
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 godep go build -o heapster k8s.io/heapster/metrics
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 godep go build -o eventer k8s.io/heapster/events
 
+debug: clean
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 GOPATH=/home/tiger-pc/heapgo go build -o heapster k8s.io/heapster/metrics
+
 sanitize:
 	hooks/check_boilerplate.sh
 	hooks/check_gofmt.sh
@@ -45,4 +48,4 @@ clean:
 	rm -f deploy/docker/heapster
 	rm -f deploy/docker/eventer
 
-.PHONY: all deps build sanitize test-unit test-unit-cov test-integration container grafana influxdb clean
+.PHONY: all deps build debug sanitize test-unit test-unit-cov test-integration container grafana influxdb clean

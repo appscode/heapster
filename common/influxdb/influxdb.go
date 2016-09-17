@@ -15,14 +15,17 @@
 package influxdb
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
-	"k8s.io/heapster/version"
-
 	influxdb "github.com/influxdata/influxdb/client"
+	"k8s.io/heapster/version"
 )
 
 type InfluxdbClient interface {
@@ -67,13 +70,17 @@ func NewClient(c InfluxdbConfig) (InfluxdbClient, error) {
 }
 
 func BuildConfig(uri *url.URL) (*InfluxdbConfig, error) {
-	config := InfluxdbConfig{
-		User:       "root",
-		Password:   "root",
-		Host:       "localhost:8086",
-		DbName:     "k8s",
-		Secure:     false,
-		WithFields: false,
+	// Read influxdb config from secret @MS
+	config, err := readConfig("/srv/influxdb/secrets/.admin")
+	if err != nil {
+		config = InfluxdbConfig{
+			User:       "root",
+			Password:   "root",
+			Host:       "localhost:8086",
+			DbName:     "k8s",
+			Secure:     false,
+			WithFields: false,
+		}
 	}
 
 	if len(uri.Host) > 0 {
@@ -106,4 +113,54 @@ func BuildConfig(uri *url.URL) (*InfluxdbConfig, error) {
 	}
 
 	return &config, nil
+}
+
+// Read Influxdb Config from file @MS
+func readConfig(path string) (InfluxdbConfig, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return InfluxdbConfig{}, err
+	}
+	defer file.Close()
+	mp := make(map[string]string)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		result := strings.Split(scanner.Text(), "=")
+		if len(result) != 2 {
+			continue
+		}
+		mp[result[0]] = result[1]
+	}
+	// Default
+	var user, password string
+	host := "monitoring-influxdb.default:8086"
+	dbName := "k8s"
+
+	if u, ok := mp["INFLUX_WRITE_USER"]; ok {
+		user = u
+	} else {
+		return InfluxdbConfig{}, errors.New("INFLUX_WRITE_USER not found")
+	}
+	if p, ok := mp["INFLUX_WRITE_PASSWORD"]; ok {
+		password = p
+	} else {
+		return InfluxdbConfig{}, errors.New("INFLUX_WRITE_PASSWORD not found")
+	}
+	if h, ok := mp["INFLUX_HOST"]; ok {
+		if p, ok := mp["INFLUX_API_PORT"]; ok {
+			host = h + ":" + p
+		}
+	}
+	if d, ok := mp["INFLUX_DB"]; ok {
+		dbName = d
+	}
+
+	defaultConfig := InfluxdbConfig{
+		User:     user,
+		Password: password,
+		Host:     host,
+		DbName:   dbName,
+		Secure:   false,
+	}
+	return defaultConfig, nil
 }

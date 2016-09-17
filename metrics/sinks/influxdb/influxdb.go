@@ -21,11 +21,10 @@ import (
 	"sync"
 	"time"
 
-	influxdb_common "k8s.io/heapster/common/influxdb"
-	"k8s.io/heapster/metrics/core"
-
 	"github.com/golang/glog"
 	influxdb "github.com/influxdata/influxdb/client"
+	influxdb_common "k8s.io/heapster/common/influxdb"
+	"k8s.io/heapster/metrics/core"
 )
 
 type influxdbSink struct {
@@ -96,7 +95,6 @@ func (sink *influxdbSink) ExportData(dataBatch *core.DataBatch) {
 		}
 
 		for _, labeledMetric := range metricSet.LabeledMetrics {
-
 			var value interface{}
 			if core.ValueInt64 == labeledMetric.ValueType {
 				value = labeledMetric.IntValue
@@ -200,7 +198,11 @@ func (sink *influxdbSink) createDatabase() error {
 	q := influxdb.Query{
 		Command: fmt.Sprintf("CREATE DATABASE %s", sink.c.DbName),
 	}
-	if resp, err := sink.client.Query(q); err != nil {
+	resp, err := sink.client.Query(q)
+	if resp.Err != nil {
+		return fmt.Errorf("Database creation failed: %v", resp.Err)
+	}
+	if err != nil {
 		if !(resp != nil && resp.Err != nil && strings.Contains(resp.Err.Error(), "already exists")) {
 			return fmt.Errorf("Database creation failed: %v", err)
 		}

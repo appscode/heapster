@@ -73,6 +73,10 @@ var (
 		Key:         "host_id",
 		Description: "Identifier specific to a host. Set by cloud provider or user",
 	}
+	LabelServiceName = LabelDescriptor{
+		Key:         "service_name",
+		Description: "Service name of specific pod",
+	}
 	LabelContainerBaseImage = LabelDescriptor{
 		Key:         "container_base_image",
 		Description: "User-defined image name that is run inside the container",

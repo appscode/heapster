@@ -176,6 +176,13 @@ func main() {
 	}
 	dataProcessors = append(dataProcessors, nodeAutoscalingEnricher)
 
+	serviceBasedEnricher, err := processors.NewServiceBasedEnricher(kubernetesUrl, podLister)
+	if err != nil {
+		glog.Fatalf("Failed to create ServiceBasedEnricher: %v", err)
+	} else {
+		dataProcessors = append(dataProcessors, serviceBasedEnricher)
+	}
+
 	// main manager
 	manager, err := manager.NewManager(sourceManager, dataProcessors, sinkManager, *argMetricResolution,
 		manager.DefaultScrapeOffset, manager.DefaultMaxParallelism)

@@ -219,8 +219,9 @@ func new(c influxdb_common.InfluxdbConfig) core.DataSink {
 		glog.Errorf("issues while creating an InfluxDB sink: %v, will retry on use", err)
 	}
 	return &influxdbSink{
-		client: client, // can be nil
-		c:      c,
+		client:   client, // can be nil
+		c:        c,
+		dbExists: true, // k8s db created during influx startup
 	}
 }
 
